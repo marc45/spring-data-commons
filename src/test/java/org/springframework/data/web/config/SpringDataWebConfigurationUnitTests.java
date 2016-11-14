@@ -15,7 +15,7 @@
  */
 package org.springframework.data.web.config;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import java.net.URLClassLoader;
@@ -36,21 +36,18 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 public class SpringDataWebConfigurationUnitTests {
 
 	@Test // DATACMNS-669
-	public void shouldNotAddQuerydslPredicateArgumentResolverWhenQuerydslNotPresent() throws ClassNotFoundException,
-			InstantiationException, IllegalAccessException {
+	public void shouldNotAddQuerydslPredicateArgumentResolverWhenQuerydslNotPresent() throws Exception {
 
 		ClassLoader classLoader = initClassLoader();
 
-		Object config = classLoader.loadClass("org.springframework.data.web.config.SpringDataWebConfiguration")
+		Object context = classLoader.loadClass("org.springframework.web.context.support.GenericWebApplicationContext")
+				.newInstance();
+		Object objectFactory = classLoader
+				.loadClass("org.springframework.data.web.config.SpringDataWebConfigurationUnitTests$ObjectFactoryImpl")
 				.newInstance();
 
-		setField(config, "context",
-				classLoader.loadClass("org.springframework.web.context.support.GenericWebApplicationContext").newInstance());
-		setField(
-				config,
-				"conversionService",
-				classLoader.loadClass(
-						"org.springframework.data.web.config.SpringDataWebConfigurationUnitTests$ObjectFactoryImpl").newInstance());
+		Object config = classLoader.loadClass("org.springframework.data.web.config.SpringDataWebConfiguration")
+				.getDeclaredConstructors()[0].newInstance(context, objectFactory);
 
 		List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<HandlerMethodArgumentResolver>();
 
@@ -97,6 +94,5 @@ public class SpringDataWebConfigurationUnitTests {
 		public ConversionService getObject() throws BeansException {
 			return null;
 		}
-
 	}
 }

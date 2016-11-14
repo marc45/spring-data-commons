@@ -15,6 +15,7 @@
  */
 package org.springframework.data.repository.util;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.data.repository.util.QueryExecutionConverters.*;
@@ -67,11 +68,11 @@ public class QueryExecutionConvertersUnitTests {
 	@Test // DATACMNS-714
 	public void registersWrapperTypes() {
 
-		assertThat(QueryExecutionConverters.supports(Optional.class), is(true));
-		assertThat(QueryExecutionConverters.supports(java.util.Optional.class), is(true));
-		assertThat(QueryExecutionConverters.supports(Future.class), is(true));
-		assertThat(QueryExecutionConverters.supports(ListenableFuture.class), is(true));
-		assertThat(QueryExecutionConverters.supports(Option.class), is(true));
+		assertThat(QueryExecutionConverters.supports(Optional.class)).isTrue();
+		assertThat(QueryExecutionConverters.supports(java.util.Optional.class)).isTrue();
+		assertThat(QueryExecutionConverters.supports(Future.class)).isTrue();
+		assertThat(QueryExecutionConverters.supports(ListenableFuture.class)).isTrue();
+		assertThat(QueryExecutionConverters.supports(Option.class)).isTrue();
 		assertThat(QueryExecutionConverters.supports(javaslang.control.Option.class), is(true));
 	}
 
@@ -119,24 +120,20 @@ public class QueryExecutionConvertersUnitTests {
 
 	@Test // DATACMNS-714
 	public void registersCompletableFutureAsWrapperTypeOnSpring42OrBetter() {
-		assertThat(QueryExecutionConverters.supports(CompletableFuture.class), is(true));
+		assertThat(QueryExecutionConverters.supports(CompletableFuture.class)).isTrue();
 	}
 
 	@Test // DATACMNS-483
 	@SuppressWarnings("unchecked")
 	public void turnsNullIntoGuavaOptional() {
 
-		Optional<Object> optional = conversionService.convert(new NullableWrapper(null), Optional.class);
-		assertThat(optional, is(Optional.<Object> absent()));
+		assertThat(conversionService.convert(new NullableWrapper(null), Optional.class)).isEqualTo(Optional.absent());
 	}
 
 	@Test // DATACMNS-483
 	@SuppressWarnings("unchecked")
 	public void turnsNullIntoJdk8Optional() {
-
-		java.util.Optional<Object> optional = conversionService.convert(new NullableWrapper(null),
-				java.util.Optional.class);
-		assertThat(optional, is(java.util.Optional.<Object> empty()));
+		assertThat(conversionService.convert(new NullableWrapper(null), java.util.Optional.class)).isEmpty();
 	}
 
 	@Test // DATACMNS-714
@@ -145,47 +142,45 @@ public class QueryExecutionConvertersUnitTests {
 
 		CompletableFuture<Object> result = conversionService.convert(new NullableWrapper(null), CompletableFuture.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.isDone(), is(true));
-		assertThat(result.get(), is(nullValue()));
+		assertThat(result).isNotNull();
+		assertThat(result.isDone()).isTrue();
+		assertThat(result.get()).isNull();
 	}
 
 	@Test // DATACMNS-768
 	public void unwrapsJdk8Optional() {
-		assertThat(QueryExecutionConverters.unwrap(java.util.Optional.of("Foo")), is((Object) "Foo"));
+		assertThat(QueryExecutionConverters.unwrap(java.util.Optional.of("Foo"))).isEqualTo("Foo");
 	}
 
 	@Test // DATACMNS-768
 	public void unwrapsGuava8Optional() {
-		assertThat(QueryExecutionConverters.unwrap(Optional.of("Foo")), is((Object) "Foo"));
+		assertThat(QueryExecutionConverters.unwrap(Optional.of("Foo"))).isEqualTo("Foo");
 	}
 
 	@Test // DATACMNS-768
 	public void unwrapsNullToNull() {
-		assertThat(QueryExecutionConverters.unwrap(null), is(nullValue()));
+		assertThat(QueryExecutionConverters.unwrap(null)).isNull();
 	}
 
 	@Test // DATACMNS-768
 	public void unwrapsNonWrapperTypeToItself() {
-		assertThat(QueryExecutionConverters.unwrap("Foo"), is((Object) "Foo"));
+		assertThat(QueryExecutionConverters.unwrap("Foo")).isEqualTo("Foo");
 	}
 
 	@Test // DATACMNS-795
 	@SuppressWarnings("unchecked")
 	public void turnsNullIntoScalaOptionEmpty() {
-
-		assertThat((Option<Object>) conversionService.convert(new NullableWrapper(null), Option.class),
-				is(Option.<Object> empty()));
+		assertThat(conversionService.convert(new NullableWrapper(null), Option.class)).isEqualTo(Option.<Object>empty());
 	}
 
 	@Test // DATACMNS-795
 	public void unwrapsScalaOption() {
-		assertThat(QueryExecutionConverters.unwrap(Option.apply("foo")), is((Object) "foo"));
+		assertThat(QueryExecutionConverters.unwrap(Option.apply("foo"))).isEqualTo("foo");
 	}
 
 	@Test // DATACMNS-874
 	public void unwrapsEmptyScalaOption() {
-		assertThat(QueryExecutionConverters.unwrap(Option.empty()), is((Object) null));
+		assertThat(QueryExecutionConverters.unwrap(Option.empty())).isNull();
 	}
 
 	@Test // DATACMNS-937

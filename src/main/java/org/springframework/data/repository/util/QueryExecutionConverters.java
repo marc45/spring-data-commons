@@ -20,12 +20,12 @@ import scala.Function0;
 import scala.Option;
 import scala.runtime.AbstractFunction0;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-import java.util.function.Supplier;
 
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
@@ -539,17 +539,6 @@ public abstract class QueryExecutionConverters {
 
 		INSTANCE;
 
-		private static final Supplier<Object> NULL_SUPPLIER = new Supplier<Object>() {
-
-			/*
-			 * (non-Javadoc)
-			 * @see java.util.function.Supplier#get()
-			 */
-			public Object get() {
-				return null;
-			}
-		};
-
 		/* 
 		 * (non-Javadoc)
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
@@ -559,7 +548,7 @@ public abstract class QueryExecutionConverters {
 		public Object convert(Object source) {
 
 			if (source instanceof javaslang.control.Option) {
-				return ((javaslang.control.Option<Object>) source).getOrElse(NULL_SUPPLIER);
+				return ((javaslang.control.Option<Object>) source).getOrElse(() -> null);
 			}
 
 			if (source instanceof Traversable) {

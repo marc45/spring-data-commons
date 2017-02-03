@@ -15,18 +15,20 @@
  */
 package org.springframework.data.web.config;
 
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
-
+import org.hamcrest.Matcher;
 import org.junit.Test;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.web.querydsl.QuerydslPredicateArgumentResolver;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.instrument.classloading.ShadowingClassLoader;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 
@@ -35,7 +37,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
  */
 public class SpringDataWebConfigurationUnitTests {
 
-	@Test // DATACMNS-669
+	@Test // DATACMNS-669R
 	public void shouldNotAddQuerydslPredicateArgumentResolverWhenQuerydslNotPresent() throws ClassNotFoundException,
 			InstantiationException, IllegalAccessException {
 
@@ -61,6 +63,46 @@ public class SpringDataWebConfigurationUnitTests {
 				fail("QuerydslPredicateArgumentResolver should not be present when Querydsl not on path");
 			}
 		}
+	}
+
+	@Test // DATACOMNS-987
+	public void shouldNotLoadJacksonConverterWhenJacksonNotPresent() {
+
+	}
+
+	@Test // DATACOMNS-987
+	public void shouldNotLoadJacksonConverterWhenJawayNotPresent() {
+
+	}
+
+	@Test // DATACOMNS-987
+	public void shouldNotLoadXBeamConverterWhenXBeamNotPresent() {
+
+	}
+
+	@Test // DATACOMNS-987
+	public void shouldNotLoadAllConvertersWhenDependenciesArePresent() throws ClassNotFoundException,
+			IllegalAccessException, InstantiationException {
+
+		ClassLoader classLoader = initClassLoader();
+
+		Object config = classLoader.loadClass("org.springframework.data.web.config.SpringDataWebConfiguration")
+				.newInstance();
+
+		setField(config, "context",
+				classLoader.loadClass("org.springframework.web.context.support.GenericWebApplicationContext").newInstance());
+
+		List<HttpMessageConverter<?>> converters = new ArrayList<HttpMessageConverter<?>>();
+
+		invokeMethod(config, "extendMessageConverters", converters);
+
+		assertThat(converters, containsInAnyOrder( //
+				instanceWithClassName("org.springframework.data.web.XmlBeamHttpMessageConverter"), //
+				instanceWithClassName("org.springframework.data.web.ProjectingJackson2HttpMessageConverter")));
+	}
+
+	private Matcher<Object> instanceWithClassName(String name) {
+		return hasProperty("class", hasProperty("name", equalTo(name)));
 	}
 
 	private ClassLoader initClassLoader() {

@@ -27,6 +27,8 @@ import org.junit.Test;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.web.ProjectingJackson2HttpMessageConverter;
+import org.springframework.data.web.XmlBeamHttpMessageConverter;
 import org.springframework.data.web.querydsl.QuerydslPredicateArgumentResolver;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.instrument.classloading.ShadowingClassLoader;
@@ -58,11 +60,8 @@ public class SpringDataWebConfigurationUnitTests {
 
 		invokeMethod(config, "addArgumentResolvers", argumentResolvers);
 
-		for (Object resolver : argumentResolvers) {
-			if (resolver instanceof QuerydslPredicateArgumentResolver) {
-				fail("QuerydslPredicateArgumentResolver should not be present when Querydsl not on path");
-			}
-		}
+		assertThat(argumentResolvers,
+				not(hasItem((Matcher) instanceWithClassName(QuerydslPredicateArgumentResolver.class))));
 	}
 
 	@Test // DATACOMNS-987
@@ -97,12 +96,21 @@ public class SpringDataWebConfigurationUnitTests {
 		invokeMethod(config, "extendMessageConverters", converters);
 
 		assertThat(converters, containsInAnyOrder( //
-				instanceWithClassName("org.springframework.data.web.XmlBeamHttpMessageConverter"), //
-				instanceWithClassName("org.springframework.data.web.ProjectingJackson2HttpMessageConverter")));
+				instanceWithClassName(XmlBeamHttpMessageConverter.class), //
+				instanceWithClassName(ProjectingJackson2HttpMessageConverter.class)));
 	}
 
-	private Matcher<Object> instanceWithClassName(String name) {
-		return hasProperty("class", hasProperty("name", equalTo(name)));
+	/**
+	 * creates a Matcher that check if an object is an instance of a class with the same name as the provided class.
+	 *
+	 * This is necessary since we are dealing with multiple classloaders which would make a simple instanceof fail all
+	 * the time
+	 *
+	 * @param expectedClass
+	 * @return
+	 */
+	private Matcher<Object> instanceWithClassName(Class<?> expectedClass) {
+		return hasProperty("class", hasProperty("name", equalTo(expectedClass.getName())));
 	}
 
 	private ClassLoader initClassLoader() {
@@ -139,6 +147,5 @@ public class SpringDataWebConfigurationUnitTests {
 		public ConversionService getObject() throws BeansException {
 			return null;
 		}
-
 	}
 }

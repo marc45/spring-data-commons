@@ -43,7 +43,7 @@ public class SpringDataWebConfigurationUnitTests {
 	public void shouldNotAddQuerydslPredicateArgumentResolverWhenQuerydslNotPresent() throws ClassNotFoundException,
 			InstantiationException, IllegalAccessException {
 
-		ClassLoader classLoader = initClassLoader();
+		ClassLoader classLoader = initClassLoader("com.mysema");
 
 		Object config = classLoader.loadClass("org.springframework.data.web.config.SpringDataWebConfiguration")
 				.newInstance();
@@ -83,7 +83,7 @@ public class SpringDataWebConfigurationUnitTests {
 	public void shouldNotLoadAllConvertersWhenDependenciesArePresent() throws ClassNotFoundException,
 			IllegalAccessException, InstantiationException {
 
-		ClassLoader classLoader = initClassLoader();
+		ClassLoader classLoader = initClassLoader("load.everything");
 
 		Object config = classLoader.loadClass("org.springframework.data.web.config.SpringDataWebConfiguration")
 				.newInstance();
@@ -113,14 +113,14 @@ public class SpringDataWebConfigurationUnitTests {
 		return hasProperty("class", hasProperty("name", equalTo(expectedClass.getName())));
 	}
 
-	private ClassLoader initClassLoader() {
+	private ClassLoader initClassLoader(final String excludedClassNamePrefix) {
 
 		ClassLoader classLoader = new ShadowingClassLoader(URLClassLoader.getSystemClassLoader()) {
 
 			@Override
 			public Class<?> loadClass(String name) throws ClassNotFoundException {
 
-				if (name.startsWith("com.mysema")) {
+				if (name.startsWith(excludedClassNamePrefix)) {
 					throw new ClassNotFoundException();
 				}
 

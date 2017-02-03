@@ -75,8 +75,22 @@ public class SpringDataWebConfigurationUnitTests {
 	}
 
 	@Test // DATACOMNS-987
-	public void shouldNotLoadXBeamConverterWhenXBeamNotPresent() {
+	public void shouldNotLoadXBeamConverterWhenXBeamNotPresent() throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 
+		ClassLoader classLoader = initClassLoader("org.xmlbeam");
+
+		Object config = classLoader.loadClass("org.springframework.data.web.config.SpringDataWebConfiguration")
+				.newInstance();
+
+		setField(config, "context",
+				classLoader.loadClass("org.springframework.web.context.support.GenericWebApplicationContext").newInstance());
+
+		List<HttpMessageConverter<?>> converters = new ArrayList<HttpMessageConverter<?>>();
+
+		invokeMethod(config, "extendMessageConverters", converters);
+
+		assertThat(converters, containsInAnyOrder( //
+				instanceWithClassName(ProjectingJackson2HttpMessageConverter.class)));
 	}
 
 	@Test // DATACOMNS-987
@@ -130,7 +144,7 @@ public class SpringDataWebConfigurationUnitTests {
 			@Override
 			protected Class<?> findClass(String name) throws ClassNotFoundException {
 
-				if (name.startsWith("com.mysema")) {
+				if (name.startsWith(excludedClassNamePrefix)) {
 					throw new ClassNotFoundException();
 				}
 
